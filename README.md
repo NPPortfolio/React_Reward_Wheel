@@ -1,2 +1,1 @@
-# my-app
-
+# React Reward Wheel
