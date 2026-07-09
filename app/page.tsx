@@ -21,7 +21,7 @@ export default function MyApp() {
     if (segments.length != 0) {
       segment_percentage = 100/(segments.length+1)
     }
-    addSegment(randomHexColor(), segment_percentage, 0)
+    addSegment(randomHexColor(), segment_percentage, randomNumberRangeInclusive(0, 360))
     console.log(segment_percentage)
   }
 
@@ -151,5 +151,9 @@ const randomHexColor = (): string => {
     .padStart(6, '0')}`;
 };
 
-//const randomNumberRange(min : number, max : number): number {
-//}
+function randomNumberRangeInclusive(min : number, max : number): number {
+  const minCeil = Math.ceil(min);
+  const maxFloor = Math.floor(max);
+  
+  return Math.floor(Math.random() * (maxFloor - minCeil + 1)) + minCeil;
+}
