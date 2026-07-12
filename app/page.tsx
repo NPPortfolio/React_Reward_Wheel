@@ -3,17 +3,19 @@
 import Image from "next/image";
 import {CSSProperties, useState} from 'react'
 import './globals.css'
+import './Vector2'
+import { Vector2 } from "./Vector2";
 
 interface RewardSegment {
   id : number,
   color : string,
   percentage : number,
-  rotation : number,
+  percentage_offset : number,
 }
 export default function MyApp() {
 
   const [segments, setSegments] = useState<RewardSegment[]>([
-    {id : 0, color : 'blue', percentage : 50, rotation : 0},
+    {id : 0, color : 'blue', percentage : 33, percentage_offset : 0},
   ])
 
   const addRandomSegment = () => {
@@ -22,15 +24,14 @@ export default function MyApp() {
       segment_percentage = 100/(segments.length+1)
     }
     addSegment(randomHexColor(), segment_percentage, randomNumberRangeInclusive(0, 360))
-    console.log(segment_percentage)
   }
 
-  const addSegment = (color : string, percentage : number, rotation : number) => {
+  const addSegment = (color : string, percentage : number, percentage_offset : number) => {
     const newSegment = {
       id : Date.now(),
       color : color,
       percentage : percentage,
-      rotation : rotation,
+      percentage_offset : percentage_offset,
     }
     setSegments([...segments, newSegment])
   }
@@ -50,13 +51,41 @@ interface RewardSegmentProps {
   segments : RewardSegment[],
 }
 function Reward_Wheel({segments} : RewardSegmentProps){
-  return (
-    /*<Reward_Segment 
-      _color = 'red'
-      _percentage = {60}
-    />*/
+  
+  const [rotation, setRotation] = useState(0)
+  const [mouseDown, setMouseDown] = useState(false)
+  
+  const handleMouseDown = () => {
+    setMouseDown(true)
+  }
 
-    <div>
+  const handleMouseUp = () => {
+    setMouseDown(false)
+  }
+
+  const handleMouseMove = () => {
+    //console.log("MOUSE MOVED")
+    if (mouseDown) {
+      setRotation(rotation+5)
+    }
+  }
+
+  const handleMouseLeave = () => {
+    setMouseDown(false)
+  }
+
+  return (
+    <div 
+      onMouseMove = {handleMouseMove}
+      onMouseDown = {handleMouseDown}
+      onMouseUp = {handleMouseUp}
+      onMouseLeave = {handleMouseLeave}
+      style = {{
+        rotate : String(rotation) + "deg",
+        position : 'absolute',
+        width : '90vmin',
+        height : '90vmin',
+      }}>
       {
         segments.map((segment) => (
           <Reward_Segment
@@ -67,7 +96,7 @@ function Reward_Wheel({segments} : RewardSegmentProps){
             //_color = 'red'
             //_percentage = segment.percentage,
             percentage = {segment.percentage}
-            rotation = {segment.rotation}
+            percentage_offset = {segment.percentage_offset}
           />
         ))
       }
@@ -75,7 +104,7 @@ function Reward_Wheel({segments} : RewardSegmentProps){
   )
 }
 
-function Reward_Segment({color, percentage, rotation} : RewardSegment){
+function Reward_Segment({color, percentage, percentage_offset} : RewardSegment){
   
   //const [_color, set_color] = useState(_color);
   //const [_percentage, set_percentage] = useState(_percentage);
@@ -89,14 +118,59 @@ function Reward_Segment({color, percentage, rotation} : RewardSegment){
   return (
     <div
       //onMouseMove = {handleMouseMove}
-      style = {Reward_Segment_style(color, percentage, rotation)}>
+      style = {Reward_Segment_style(color, percentage, percentage_offset)}>
     </div>
   )
 }
 
-const Reward_Segment_style = (color : string, percentage : number, rotation : number): CSSProperties => {
+const Reward_Segment_style = (color : string, percentage : number, percentage_offset : number): CSSProperties => {
   
-  // calcuate the 
+  //console.log(percentage, " ", percentage_offset)
+  let clip_path_string : string = "polygon(50% 50%, "
+  
+  let p1 = Reward_Segment_polygon_coordinates_from_rotation_percentage(percentage_offset)
+  let p2 = Reward_Segment_polygon_coordinates_from_rotation_percentage(percentage_offset + percentage)
+
+  clip_path_string += String(p1.x) + "% " + String(p1.y) + "%"
+  clip_path_string += ", "
+
+  const corners: Vector2[] = [
+    new Vector2(100, 0),
+    new Vector2(100, 100),
+    new Vector2(0, 100),
+    new Vector2(0, 0),
+  ]
+
+  let start_index = (percentage_offset % 100) % 25
+  let end_index = ((percentage_offset+percentage) % 100) % 25
+
+  const total_length = corners.length;
+  const iterations = start_index <= end_index 
+  ? end_index - start_index + 1 
+  : (total_length - start_index) + (end_index + 1);
+
+  for (let step = 0; step < iterations; step++) {
+    const current_index = (start_index + step) % total_length;
+    let corner = corners[current_index];
+    clip_path_string += String(corner.x) + "% " + String(corner.y) + "%, "
+  }
+
+
+  clip_path_string += String(p2.x) + "% " + String(p2.y) + "%"
+  clip_path_string += ")"
+
+  console.log(clip_path_string)
+
+  return {
+    position : 'absolute',
+    width : '90vmin',
+    height : '90vmin',
+    borderRadius : "50%",
+    backgroundColor : color,
+    clipPath : clip_path_string,
+  }
+
+  /*
   let clip_path_string : string = "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
   if (percentage < 100) {
     clip_path_string = "polygon(0% 0%, 50% 0%, 50% 50%, "
@@ -131,16 +205,36 @@ const Reward_Segment_style = (color : string, percentage : number, rotation : nu
   }
 
   return {
+    rotate : String(rotation) + 'deg',
     position : 'absolute',
-    width : '80%',
-    height : '80%',
+    width : '90vmin',
+    height : '90vmin',
     borderRadius : "50%",
     backgroundColor : color,
     clipPath : clip_path_string,
-    rotate : String(rotation) + 'deg',
-  }
+  }*/
 }
 
+const Reward_Segment_polygon_coordinates_from_rotation_percentage = (percentage : number): Vector2 => {
+  // 0.707... * 1.5 > 1, so the polygon wont clip when it goes to the next corner
+  //console.log(Math.sin(percentage/100 * (2 * Math.PI)))
+  //console.log(Math.cos(percentage/100 * (2 * Math.PI)))
+  
+  //let x_value = 1.5 * 50 * Math.sin(percentage/100 * (2 * Math.PI))
+  //let y_value = 1.5 * 50 * -Math.cos(percentage/100 * (2 * Math.PI))
+  
+  let x_value = 50 * Math.sin(percentage/100 * (2 * Math.PI))
+  let y_value = 50 * -Math.cos(percentage/100 * (2 * Math.PI))
+
+  return new Vector2(x_value + 50, y_value + 50)
+
+  //let x_string = String(x_value + 50)
+  //let y_string = String(y_value + 50)
+
+  //console.log(percentage, ": ", x_string, " ", y_string)
+
+  //return x_string + "% " + y_string + "%"
+}
 
 
 
@@ -157,3 +251,6 @@ function randomNumberRangeInclusive(min : number, max : number): number {
   
   return Math.floor(Math.random() * (maxFloor - minCeil + 1)) + minCeil;
 }
+
+
+
