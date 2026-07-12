@@ -1,7 +1,7 @@
 'use client'
 
 import Image from "next/image";
-import {CSSProperties, useState} from 'react'
+import {CSSProperties, useState, useEffect} from 'react'
 import './globals.css'
 import './Vector2'
 import { Vector2 } from "./Vector2";
@@ -17,6 +17,17 @@ export default function MyApp() {
   const [segments, setSegments] = useState<RewardSegment[]>([
     {id : 0, color : 'blue', percentage : 33, percentage_offset : 0},
   ])
+
+  // 1. Define your initialization function
+  const initFunction = () => {
+    console.log("Page loaded / Component mounted!");
+    // Fetch data, configure APIs, or read local storage here
+  };
+
+  // 2. Run it once on load
+  useEffect(() => {
+    initFunction();
+  }, []); // <-- Empty array ensures this only runs once
 
   const addRandomSegment = () => {
     let segment_percentage = 100
@@ -40,8 +51,28 @@ export default function MyApp() {
     setSegments(segments.filter(segment => segment.id !== id))
   }
 
+  // React can't update individual things in an array because it won't trigger a re-render? Need to remake the entire array
+  const updateSegmentAtIndex = (index : number, newSegment : RewardSegment) => {
+    setSegments((segments) => 
+      segments.map((segment, i) => (i === index ? newSegment : segment))
+    );
+  };
+
+  const handleMouseMove = () => {
+    /*
+    let newSegment = segments[0]
+    newSegment.percentage += 2
+    newSegment.percentage_offset += 1
+    newSegment.percentage %= 100
+    newSegment.percentage_offset %= 100
+    updateSegmentAtIndex(0, newSegment)
+    */
+  }
+
+  
+
   return (
-    <div>
+    <div onMouseMove = {handleMouseMove}>
       <button onClick = {addRandomSegment}>ADD RANDOM SEGMENT</button>
       <Reward_Wheel segments = {segments} />
     </div>
@@ -131,9 +162,39 @@ const Reward_Segment_style = (color : string, percentage : number, percentage_of
   let p1 = Reward_Segment_polygon_coordinates_from_rotation_percentage(percentage_offset)
   let p2 = Reward_Segment_polygon_coordinates_from_rotation_percentage(percentage_offset + percentage)
 
-  clip_path_string += String(p1.x) + "% " + String(p1.y) + "%"
-  clip_path_string += ", "
+  clip_path_string += String(p1.x) + "% " + String(p1.y) + "%, "
 
+  // maybe put up the diagram I made to figure this out
+  // also could clean up with a for loop but this might be easier to understand along with the diagram
+  // 0.707... * 1.5 > 1, so the polygon wont clip when it goes to the next point, thats why all corners have scale value of 1.5 
+  let corner1 = Reward_Segment_polygon_coordinates_from_rotation_percentage(percentage_offset + 12.5, 1.5)
+  clip_path_string += String(corner1.x) + "% " + String(corner1.y) + "%, "
+  if (percentage > 25) {
+    let corner2 = Reward_Segment_polygon_coordinates_from_rotation_percentage(percentage_offset + 12.5 + 25, 1.5)
+    clip_path_string += String(corner2.x) + "% " + String(corner2.y) + "%, "
+    if (percentage > 50) {
+      let corner3 = Reward_Segment_polygon_coordinates_from_rotation_percentage(percentage_offset + 12.5 + 50, 1.5)
+      clip_path_string += String(corner3.x) + "% " + String(corner3.y) + "%, "
+      if (percentage > 75) {
+        let corner4 = Reward_Segment_polygon_coordinates_from_rotation_percentage(percentage_offset + 12.5 + 75, 1.5)
+        clip_path_string += String(corner4.x) + "% " + String(corner4.y) + "%, "
+      }
+    }
+  }
+
+  clip_path_string += String(p2.x) + "% " + String(p2.y) + "%"
+  clip_path_string += ")"
+
+  return {
+    position : 'absolute',
+    width : '90vmin',
+    height : '90vmin',
+    borderRadius : "50%",
+    backgroundColor : color,
+    clipPath : clip_path_string,
+  }
+
+  /*
   const corners: Vector2[] = [
     new Vector2(100, 0),
     new Vector2(100, 100),
@@ -153,22 +214,7 @@ const Reward_Segment_style = (color : string, percentage : number, percentage_of
     const current_index = (start_index + step) % total_length;
     let corner = corners[current_index];
     clip_path_string += String(corner.x) + "% " + String(corner.y) + "%, "
-  }
-
-
-  clip_path_string += String(p2.x) + "% " + String(p2.y) + "%"
-  clip_path_string += ")"
-
-  console.log(clip_path_string)
-
-  return {
-    position : 'absolute',
-    width : '90vmin',
-    height : '90vmin',
-    borderRadius : "50%",
-    backgroundColor : color,
-    clipPath : clip_path_string,
-  }
+  }*/
 
   /*
   let clip_path_string : string = "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
@@ -215,7 +261,7 @@ const Reward_Segment_style = (color : string, percentage : number, percentage_of
   }*/
 }
 
-const Reward_Segment_polygon_coordinates_from_rotation_percentage = (percentage : number): Vector2 => {
+const Reward_Segment_polygon_coordinates_from_rotation_percentage = (percentage : number, scaleValue : number = 1): Vector2 => {
   // 0.707... * 1.5 > 1, so the polygon wont clip when it goes to the next corner
   //console.log(Math.sin(percentage/100 * (2 * Math.PI)))
   //console.log(Math.cos(percentage/100 * (2 * Math.PI)))
@@ -223,8 +269,8 @@ const Reward_Segment_polygon_coordinates_from_rotation_percentage = (percentage 
   //let x_value = 1.5 * 50 * Math.sin(percentage/100 * (2 * Math.PI))
   //let y_value = 1.5 * 50 * -Math.cos(percentage/100 * (2 * Math.PI))
   
-  let x_value = 50 * Math.sin(percentage/100 * (2 * Math.PI))
-  let y_value = 50 * -Math.cos(percentage/100 * (2 * Math.PI))
+  let x_value = scaleValue * 50 * Math.sin(percentage/100 * (2 * Math.PI))
+  let y_value = scaleValue * 50 * -Math.cos(percentage/100 * (2 * Math.PI))
 
   return new Vector2(x_value + 50, y_value + 50)
 
