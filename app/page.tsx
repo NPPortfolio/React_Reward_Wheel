@@ -117,17 +117,31 @@ function Reward_Wheel({segments} : RewardSegmentProps){
   const [mouseDown, setMouseDown] = useState(false)
   
   const velocityRef = useRef(velocity)
-
   useEffect(() => {
     velocityRef.current = velocity;
   }, [velocity])
 
+  const mouseDownRef = useRef(mouseDown)
   useEffect(() => {
+    mouseDownRef.current = mouseDown;
+  }, [mouseDown])
 
+  useEffect(() => {
+    animateSpin()    
+  }, []);
+
+  const animateSpin = () => {
+    
     let animationFrameID : number
 
     const animate = () => {
+      console.log(velocityRef.current)
+      if (mouseDownRef.current) {
+        cancelAnimationFrame(animationFrameID)
+        return
+      }
       if (Math.abs(velocityRef.current) < 0.01) {
+        // TODO pop up winner
         cancelAnimationFrame(animationFrameID)
         return
       }
@@ -144,7 +158,7 @@ function Reward_Wheel({segments} : RewardSegmentProps){
     animationFrameID = requestAnimationFrame(animate)
 
     return () => cancelAnimationFrame(animationFrameID)
-  }, []);
+  }
 
   const handleMouseDown = () => {
     setMouseDown(true)
@@ -152,6 +166,7 @@ function Reward_Wheel({segments} : RewardSegmentProps){
 
   const handleMouseUp = () => {
     setMouseDown(false)
+    animateSpin()
   }
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -169,7 +184,9 @@ function Reward_Wheel({segments} : RewardSegmentProps){
       //console.log("Delta: ", delta)
       //console.log("Tangent: ", clockwiseTangent);
       //console.log("Mouse movement: ", mouseMovement)
-      
+      //velocityRef.current = dot
+      setVelocity(dot)
+      //console.log(velocity)
       setRotation(rotation+dot)
     }
   }
