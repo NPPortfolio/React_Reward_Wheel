@@ -1,28 +1,57 @@
 'use client'
 
 import Image from "next/image";
-import {CSSProperties, useState, useEffect} from 'react'
+import {CSSProperties, useState, useRef, useEffect} from 'react'
 import './globals.css'
 import './Vector2'
 import { Vector2 } from "./Vector2";
 
-interface RewardSegment {
-  id : number,
-  color : string,
-  percentage : number,
-  percentage_offset : number,
+class RewardSegment {
+  id : number;
+  color : string;
+  percentage : number;
+  percentage_offset : number;
+
+  constructor(id: number, color: string, percentage : number, percentage_offset : number) {
+    this.id = id;
+    this.color = color;
+    this.percentage = percentage;
+    this.percentage_offset = percentage_offset;
+  }
 }
 export default function MyApp() {
 
   const [segments, setSegments] = useState<RewardSegment[]>([
-    {id : 0, color : 'blue', percentage : 33, percentage_offset : 0},
+    //{id : 0, color : 'blue', percentage : 33, percentage_offset : 0},
   ])
 
   // 1. Define your initialization function
   const initFunction = () => {
-    console.log("Page loaded / Component mounted!");
-    // Fetch data, configure APIs, or read local storage here
+    randomizeSegments(5, 5)
   };
+
+  const randomizeSegments = (numSegments : number, minimumSegmentPercentage : number) => {
+    // TODO? check that numSegments * minimumSegmentPercentage !> 100
+    let percentageLeft = 100 - (minimumSegmentPercentage * numSegments)
+    
+    // In React, setting state does not happen immediately because state updates act as scheduled requests rather than instant commands, and the current execution block reads from a fixed snapshot of your component
+    // ^ should use arrays made in scope instead
+    let temp = Array.from({ length: numSegments }, (_, i) => new RewardSegment(i, randomHexColor(), minimumSegmentPercentage, i));
+    // This is going to be very uniform, probably want better way to do it
+    while (percentageLeft > 0) {
+      temp[randomNumberRangeInclusive(0, numSegments-1)].percentage += 1
+      percentageLeft -= 1;
+    }
+
+    let running_percentage_offset = 0
+    for (let i = 0; i < temp.length; i += 1) {
+      temp[i].percentage_offset = running_percentage_offset
+      running_percentage_offset += temp[i].percentage
+    }
+
+    setSegments(temp);
+    console.log(temp)
+  }
 
   // 2. Run it once on load
   useEffect(() => {
@@ -30,11 +59,13 @@ export default function MyApp() {
   }, []); // <-- Empty array ensures this only runs once
 
   const addRandomSegment = () => {
+    /*
     let segment_percentage = 100
     if (segments.length != 0) {
       segment_percentage = 100/(segments.length+1)
     }
     addSegment(randomHexColor(), segment_percentage, randomNumberRangeInclusive(0, 360))
+    */
   }
 
   const addSegment = (color : string, percentage : number, percentage_offset : number) => {
@@ -58,21 +89,19 @@ export default function MyApp() {
     );
   };
 
-  const handleMouseMove = () => {
-    /*
+  /*const handleMouseMove = () => {
     let newSegment = segments[0]
     newSegment.percentage += 2
     newSegment.percentage_offset += 1
     newSegment.percentage %= 100
     newSegment.percentage_offset %= 100
     updateSegmentAtIndex(0, newSegment)
-    */
-  }
+  }*/
 
   
 
   return (
-    <div onMouseMove = {handleMouseMove}>
+    <div >
       <button onClick = {addRandomSegment}>ADD RANDOM SEGMENT</button>
       <Reward_Wheel segments = {segments} />
     </div>
@@ -82,10 +111,41 @@ interface RewardSegmentProps {
   segments : RewardSegment[],
 }
 function Reward_Wheel({segments} : RewardSegmentProps){
-  
-  const [rotation, setRotation] = useState(0)
+   
+  const [rotation, setRotation] = useState(0.0)
+  const [velocity, setVelocity] = useState(20.0)
   const [mouseDown, setMouseDown] = useState(false)
   
+  const velocityRef = useRef(velocity)
+
+  useEffect(() => {
+    velocityRef.current = velocity;
+  }, [velocity])
+
+  useEffect(() => {
+
+    let animationFrameID : number
+
+    const animate = () => {
+      if (Math.abs(velocityRef.current) < 0.01) {
+        cancelAnimationFrame(animationFrameID)
+        return
+      }
+      const newVelocity = velocityRef.current * 0.97
+      velocityRef.current = newVelocity
+      console.log(velocityRef.current)
+      
+      setVelocity(newVelocity)
+      setRotation((prevRotation) => prevRotation + newVelocity)
+      
+      animationFrameID = requestAnimationFrame(animate)
+    }
+
+    animationFrameID = requestAnimationFrame(animate)
+
+    return () => cancelAnimationFrame(animationFrameID)
+  }, []);
+
   const handleMouseDown = () => {
     setMouseDown(true)
   }
@@ -94,10 +154,23 @@ function Reward_Wheel({segments} : RewardSegmentProps){
     setMouseDown(false)
   }
 
-  const handleMouseMove = () => {
-    //console.log("MOUSE MOVED")
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     if (mouseDown) {
-      setRotation(rotation+5)
+
+      const rect = event.currentTarget.getBoundingClientRect();
+      const center = new Vector2(rect.left + rect.width / 2, rect.top + rect.height / 2)
+
+      const delta = new Vector2(event.clientX - center.x, event.clientY - center.y)
+      const clockwiseTangent = new Vector2(-delta.y, delta.x).normalize()
+      const mouseMovement = new Vector2(event.movementX, event.movementY)
+
+      const dot = mouseMovement.dot(clockwiseTangent)
+
+      //console.log("Delta: ", delta)
+      //console.log("Tangent: ", clockwiseTangent);
+      //console.log("Mouse movement: ", mouseMovement)
+      
+      setRotation(rotation+dot)
     }
   }
 
@@ -300,3 +373,37 @@ function randomNumberRangeInclusive(min : number, max : number): number {
 
 
 
+/*
+
+Advanced: Pausing, Resuming, or Resetting TimersIf you need a dynamic interval (e.g., a stopwatch with start, pause, and stop buttons), map a boolean status variable directly to your dependency array. React automatically executes the cleanup function to wipe out the old interval before starting a fresh one.jsximport { useState, useEffect } from 'react';
+
+function Stopwatch() {
+  const [seconds, setSeconds] = useState(0);
+  const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    let intervalId;
+
+    if (isActive) {
+      intervalId = setInterval(() => {
+        setSeconds((prev) => prev + 1);
+      }, 1000);
+    }
+
+    // Clears the interval immediately when isActive changes or unmounts
+    return () => clearInterval(intervalId);
+  }, [isActive]); 
+
+  return (
+    <div>
+      <h1>Time: {seconds}s</h1>
+      <button onClick={() => setIsActive(!isActive)}>
+        {isActive ? 'Pause' : 'Start'}
+      </button>
+      <button onClick={() => { setIsActive(false); setSeconds(0); }}>
+        Reset
+      </button>
+    </div>
+  );
+}
+  */
