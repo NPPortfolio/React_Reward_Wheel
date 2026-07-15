@@ -6,19 +6,7 @@ import './globals.css'
 import './Vector2'
 import { Vector2 } from "./Vector2";
 
-class RewardSegment {
-  id : number;
-  color : string;
-  percentage : number;
-  percentage_offset : number;
 
-  constructor(id: number, color: string, percentage : number, percentage_offset : number) {
-    this.id = id;
-    this.color = color;
-    this.percentage = percentage;
-    this.percentage_offset = percentage_offset;
-  }
-}
 export default function MyApp() {
 
   const [segments, setSegments] = useState<RewardSegment[]>([
@@ -101,11 +89,54 @@ export default function MyApp() {
   
 
   return (
-    <div >
-      <button onClick = {addRandomSegment}>ADD RANDOM SEGMENT</button>
+    <div 
+      style = {{
+        display : "flex",
+        width : '90vw',
+        height : '90vh',
+        //height : '100%',
+        //width : '100%',
+        flexDirection : "row",
+        backgroundColor : "blue",
+        gap : 16,
+      }}>
       <Reward_Wheel segments = {segments} />
+      <RewardList />
     </div>
   );
+}
+
+function RewardList(){
+
+  return (
+    <div
+    style = {{
+      backgroundColor : 'pink',
+      flex : '1 0 auto',
+      //height : '100%',
+      //width : '100%',
+      //width : '90vmin',
+      //height : '90vmin',
+    }}
+    >
+
+    </div>
+  )
+}
+
+// NOTE: some data for a reward segment on the wheel wouldn't be used for the list and vice versa, but can combine all data into one for simplicity
+class RewardSegment {
+  id : number;
+  color : string;
+  percentage : number;
+  percentage_offset : number;
+
+  constructor(id: number, color: string, percentage : number, percentage_offset : number) {
+    this.id = id;
+    this.color = color;
+    this.percentage = percentage;
+    this.percentage_offset = percentage_offset;
+  }
 }
 interface RewardSegmentProps {
   segments : RewardSegment[],
@@ -203,9 +234,11 @@ function Reward_Wheel({segments} : RewardSegmentProps){
       onMouseLeave = {handleMouseLeave}
       style = {{
         rotate : String(rotation) + "deg",
-        position : 'absolute',
+        flex : '1 0 auto',
+        //backgroundColor : 'purple',
+        //width : '100%',
         width : '90vmin',
-        height : '90vmin',
+        //height : '90vmin'
       }}>
       {
         segments.map((segment) => (
@@ -277,8 +310,8 @@ const Reward_Segment_style = (color : string, percentage : number, percentage_of
 
   return {
     position : 'absolute',
-    width : '90vmin',
-    height : '90vmin',
+    width : '100%',
+    height : '100%',
     borderRadius : "50%",
     backgroundColor : color,
     clipPath : clip_path_string,
