@@ -99,6 +99,8 @@ export default function MyApp() {
         flexDirection : "row",
         backgroundColor : "blue",
         gap : 16,
+        overflowX : 'hidden',
+        overflowY : 'hidden',
       }}>
       <Reward_Wheel segments = {segments} />
       <RewardList />
@@ -234,10 +236,13 @@ function Reward_Wheel({segments} : RewardSegmentProps){
       onMouseLeave = {handleMouseLeave}
       style = {{
         rotate : String(rotation) + "deg",
-        flex : '1 0 auto',
-        //backgroundColor : 'purple',
+        flex : '0 0 auto',
+        backgroundColor : 'purple',
+        height : '100%',
+        aspectRatio : '1',
+        alignSelf : 'flex-start'
         //width : '100%',
-        width : '90vmin',
+        //width : '90vmin',
         //height : '90vmin'
       }}>
       {
