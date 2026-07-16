@@ -38,7 +38,6 @@ export default function MyApp() {
     }
 
     setSegments(temp);
-    console.log(temp)
   }
 
   // 2. Run it once on load
@@ -115,14 +114,16 @@ function RewardList({segments} : RewardSegmentProps){
     <div
     style = {{
       backgroundColor : 'pink',
-      flex : '1 1 auto',
+      flex : '1 1 0',
+      minWidth : 0,
+      minHeight : 0,
       display : 'flex',
       flexDirection : 'column',
       justifyContent : 'center',
-      padding : '3%',
+      padding : '2%',
       //alignItems : 'center',
       gap : 16,
-      height : '100%',
+      //height : '100%',
       //width : '100%',
       //width : '90vmin',
       //height : '90vmin',
@@ -160,11 +161,11 @@ function RewardListElement({color, percentage} : RewardListElementProps) {
       <div
         style = {{
           backgroundColor : color,
-          //borderRadius : '10%',
-          //padding : '16px',
+          borderRadius : '5vmin',
+          //padding : '8px',
           flexGrow : 1,
           flexShrink : 1,
-          flexBasis : 0,
+          flexBasis : 'auto',
           minHeight : 0,
           minWidth : 0,
         }}>
@@ -215,7 +216,6 @@ function Reward_Wheel({segments} : RewardSegmentProps){
     let animationFrameID : number
 
     const animate = () => {
-      console.log(velocityRef.current)
       if (mouseDownRef.current) {
         cancelAnimationFrame(animationFrameID)
         return
@@ -227,7 +227,6 @@ function Reward_Wheel({segments} : RewardSegmentProps){
       }
       const newVelocity = velocityRef.current * 0.97
       velocityRef.current = newVelocity
-      console.log(velocityRef.current)
       
       setVelocity(newVelocity)
       setRotation((prevRotation) => prevRotation + newVelocity)
