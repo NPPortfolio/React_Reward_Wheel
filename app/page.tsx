@@ -120,7 +120,7 @@ function RewardList({segments} : RewardSegmentProps){
       display : 'flex',
       flexDirection : 'column',
       justifyContent : 'center',
-      padding : '2%',
+      padding : '8px',
       //alignItems : 'center',
       gap : 16,
       //height : '100%',
@@ -161,15 +161,50 @@ function RewardListElement({color, percentage} : RewardListElementProps) {
       <div
         style = {{
           backgroundColor : color,
-          borderRadius : '5vmin',
-          //padding : '8px',
+          borderRadius : '100vmin',
           flexGrow : 1,
           flexShrink : 1,
           flexBasis : 'auto',
           minHeight : 0,
           minWidth : 0,
-        }}>
-        <h1>HELLO</h1>
+          justifyContent : 'flex-start',
+          alignItems : 'stretch',
+          //padding : '2%',
+          display : 'flex'
+        }}
+      >
+        <div
+          style = {{
+            borderRadius : '100vmin',
+            backgroundColor : "white",
+
+            flexGrow : 0,
+            flexShrink : 1,
+            flexBasis : 'auto',
+            minWidth : 0,
+            minHeight : 0,
+            //marginRight : 'auto',
+            //maxWidth : '0%',
+            maxHeight : '110%',
+            //alignSelf : 'center',
+            aspectRatio : 1/1,
+
+
+            display : 'flex',
+            justifyContent : 'center',
+            alignItems : 'center',
+
+            containerType : 'inline-size',
+          }}
+        >
+          <p style = {{
+            fontFamily : "'Brush Script MT', 'Brush Script Std', cursive",
+            fontSize : '80cqw',
+          }}
+          >
+            {percentage}
+          </p>
+        </div>
       </div>
     )
 }
