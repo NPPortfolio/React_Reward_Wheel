@@ -92,38 +92,85 @@ export default function MyApp() {
     <div 
       style = {{
         display : "flex",
-        width : '90vw',
-        height : '90vh',
+        width : '100vw',
+        height : '100vh',
+        justifyContent : 'center',
         //height : '100%',
         //width : '100%',
         flexDirection : "row",
         backgroundColor : "blue",
-        gap : 16,
+        gap : 32,
         overflowX : 'hidden',
         overflowY : 'hidden',
       }}>
       <Reward_Wheel segments = {segments} />
-      <RewardList />
+      <RewardList segments = {segments}/>
     </div>
   );
 }
 
-function RewardList(){
+function RewardList({segments} : RewardSegmentProps){
 
   return (
     <div
     style = {{
       backgroundColor : 'pink',
-      flex : '1 0 auto',
-      //height : '100%',
+      flex : '1 1 auto',
+      display : 'flex',
+      flexDirection : 'column',
+      justifyContent : 'center',
+      padding : '3%',
+      //alignItems : 'center',
+      gap : 16,
+      height : '100%',
       //width : '100%',
       //width : '90vmin',
       //height : '90vmin',
     }}
     >
+    {
+      segments.map((segment) => (
+        <RewardListElement
+          key = {segment.id}
+          id = {segment.id}
+          color = {segment.color}
+          percentage = {segment.percentage}
+        />
+      ))
+    }
 
     </div>
   )
+}
+
+class RewardListElementProps {
+  id : number;
+  color : string;
+  percentage : number;
+
+  constructor(id : number, color : string, percentage : number) {
+    this.id = id
+    this.color = color
+    this.percentage = percentage
+  }
+}
+function RewardListElement({color, percentage} : RewardListElementProps) {
+
+    return (
+      <div
+        style = {{
+          backgroundColor : color,
+          //borderRadius : '10%',
+          //padding : '16px',
+          flexGrow : 1,
+          flexShrink : 1,
+          flexBasis : 0,
+          minHeight : 0,
+          minWidth : 0,
+        }}>
+        <h1>HELLO</h1>
+      </div>
+    )
 }
 
 // NOTE: some data for a reward segment on the wheel wouldn't be used for the list and vice versa, but can combine all data into one for simplicity
@@ -237,10 +284,10 @@ function Reward_Wheel({segments} : RewardSegmentProps){
       style = {{
         rotate : String(rotation) + "deg",
         flex : '0 0 auto',
-        backgroundColor : 'purple',
+        //backgroundColor : 'purple',
         height : '100%',
         aspectRatio : '1',
-        alignSelf : 'flex-start'
+        //alignSelf : 'flex-start'
         //width : '100%',
         //width : '90vmin',
         //height : '90vmin'
