@@ -13,6 +13,8 @@ export default function MyApp() {
     //{id : 0, color : 'blue', percentage : 33, percentage_offset : 0},
   ])
 
+  const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0)
+
   // 1. Define your initialization function
   const initFunction = () => {
     randomizeSegments(5, 5)
@@ -102,8 +104,8 @@ export default function MyApp() {
         overflowX : 'hidden',
         overflowY : 'hidden',
       }}>
-      <Reward_Wheel segments = {segments}/>
-      <RewardList segments = {segments}/>
+      <RewardWheel segments = {segments} currentSegmentIndex={currentSegmentIndex} setCurrentSegmentIndex={setCurrentSegmentIndex}/>
+      <RewardList segments = {segments} currentSegmentIndex={currentSegmentIndex} setCurrentSegmentIndex={setCurrentSegmentIndex}/>
     </div>
   );
 }
@@ -225,13 +227,20 @@ class RewardSegment {
 }
 interface RewardSegmentProps {
   segments : RewardSegment[],
+  currentSegmentIndex : number,
+  setCurrentSegmentIndex : React.Dispatch<React.SetStateAction<number>>,
 }
-function Reward_Wheel({segments} : RewardSegmentProps){
+function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : RewardSegmentProps){
    
   const [rotation, setRotation] = useState(0.0)
   const [velocity, setVelocity] = useState(20.0)
   const [mouseDown, setMouseDown] = useState(false)
   
+  const rotationRef = useRef(rotation)
+  useEffect(() => {
+    rotationRef.current = rotation;
+  }, [rotation])
+
   const velocityRef = useRef(velocity)
   useEffect(() => {
     velocityRef.current = velocity;
@@ -251,6 +260,15 @@ function Reward_Wheel({segments} : RewardSegmentProps){
     let animationFrameID : number
 
     const animate = () => {
+      // optimization here to store the rotation out of 360 instead of 100, and not iterate through the array every frame
+      let rotation_percentage = rotationRef.current/3.6
+      console.log(segments.length)
+      for (let i = 0; i < segments.length; i += 1) {
+        if ((rotation_percentage > segments[i].percentage_offset) && (rotation_percentage < segments[i].percentage_offset + segments[i].percentage)) {
+          setCurrentSegmentIndex(i)
+        }
+      }
+
       if (mouseDownRef.current) {
         cancelAnimationFrame(animationFrameID)
         return
@@ -262,10 +280,16 @@ function Reward_Wheel({segments} : RewardSegmentProps){
       }
       const newVelocity = velocityRef.current * 0.97
       velocityRef.current = newVelocity
-      
       setVelocity(newVelocity)
-      setRotation((prevRotation) => prevRotation + newVelocity)
-      
+
+      const newRotation = (rotationRef.current + newVelocity) % 360;
+      rotationRef.current = newRotation
+      setRotation(newRotation)
+
+      // why when I log the rotation it hasn't applied the modulo yet? something to do with how react updates
+      //console.log(rotation)
+      //console.log("Rotation: ", rotationRef.current)
+
       animationFrameID = requestAnimationFrame(animate)
     }
 
@@ -315,18 +339,18 @@ function Reward_Wheel({segments} : RewardSegmentProps){
         position : 'relative',
         //backgroundColor : 'green',
         padding : '3%',
+        filter : 'drop-shadow(0px 0px 20px rgba(1.0, 0.0, 0.0, 1.0))',
       }}
     >
       <div
         style = {{
           position : 'absolute',
-          backgroundColor : 'white',
+          background : 'linear-gradient(180deg,rgba(131, 58, 180, 1) 0%, rgba(253, 29, 29, 1) 50%, rgba(252, 176, 69, 1) 100%)',
           width : '5%',
           height : '10%',
           left : '50%',
           transform: 'translate(-50%, -50%)',
           zIndex : '1',
-          filter : 'drop-shadow(0px 0px 1000px rgba(1.0, 0.0, 0.0, 1.0))',
           clipPath : 'polygon(0% 0%, 50% 100%, 100% 0%)',
         }}>
       </div>
@@ -345,7 +369,7 @@ function Reward_Wheel({segments} : RewardSegmentProps){
           //width : '100%',
           //width : '90vmin',
           //height : '90vmin'
-          filter : 'drop-shadow(0px 0px 20px rgba(0.0, 0.0, 0.0, 1.0))',
+          //filter : 'drop-shadow(0px 0px 20px rgba(0.0, 0.0, 0.0, 1.0))',
         }}>
         {
           segments.map((segment) => (
