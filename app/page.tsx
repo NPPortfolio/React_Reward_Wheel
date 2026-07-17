@@ -102,7 +102,7 @@ export default function MyApp() {
         overflowX : 'hidden',
         overflowY : 'hidden',
       }}>
-      <Reward_Wheel segments = {segments} />
+      <Reward_Wheel segments = {segments}/>
       <RewardList segments = {segments}/>
     </div>
   );
@@ -310,36 +310,59 @@ function Reward_Wheel({segments} : RewardSegmentProps){
   }
 
   return (
-    <div 
-      onMouseMove = {handleMouseMove}
-      onMouseDown = {handleMouseDown}
-      onMouseUp = {handleMouseUp}
-      onMouseLeave = {handleMouseLeave}
+    <div
       style = {{
-        rotate : String(rotation) + "deg",
-        flex : '0 0 auto',
-        //backgroundColor : 'purple',
-        height : '100%',
-        aspectRatio : '1',
-        //alignSelf : 'flex-start'
-        //width : '100%',
-        //width : '90vmin',
-        //height : '90vmin'
-      }}>
-      {
-        segments.map((segment) => (
-          <Reward_Segment
-            key = {segment.id}
-            // TODO: how to get rid of this duplicate key and id?
-            id = {segment.id}
-            color = {segment.color}
-            //_color = 'red'
-            //_percentage = segment.percentage,
-            percentage = {segment.percentage}
-            percentage_offset = {segment.percentage_offset}
-          />
-        ))
-      }
+        position : 'relative',
+        //backgroundColor : 'green',
+        padding : '3%',
+      }}
+    >
+      <div
+        style = {{
+          position : 'absolute',
+          backgroundColor : 'white',
+          width : '5%',
+          height : '10%',
+          left : '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex : '1',
+          filter : 'drop-shadow(0px 0px 1000px rgba(1.0, 0.0, 0.0, 1.0))',
+          clipPath : 'polygon(0% 0%, 50% 100%, 100% 0%)',
+        }}>
+      </div>
+      <div 
+        onMouseMove = {handleMouseMove}
+        onMouseDown = {handleMouseDown}
+        onMouseUp = {handleMouseUp}
+        onMouseLeave = {handleMouseLeave}
+        style = {{
+          rotate : String(rotation) + "deg",
+          flex : '0 0 auto',
+          //backgroundColor : 'purple',
+          height : '100%',
+          aspectRatio : '1',
+          //alignSelf : 'flex-start'
+          //width : '100%',
+          //width : '90vmin',
+          //height : '90vmin'
+          filter : 'drop-shadow(0px 0px 20px rgba(0.0, 0.0, 0.0, 1.0))',
+        }}>
+        {
+          segments.map((segment) => (
+            <Reward_Segment
+              key = {segment.id}
+              // TODO: how to get rid of this duplicate key and id?
+              id = {segment.id}
+              color = {segment.color}
+              //_color = 'red'
+              //_percentage = segment.percentage,
+              percentage = {segment.percentage}
+              percentage_offset = {segment.percentage_offset}
+            />
+          ))
+        }
+        
+      </div>
     </div>
   )
 }
