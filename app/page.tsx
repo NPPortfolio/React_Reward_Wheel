@@ -200,7 +200,7 @@ function RewardListElement({color, percentage} : RewardListElementProps) {
           }}
         >
           <p style = {{
-            fontFamily : "'Brush Script MT', 'Brush Script Std', cursive",
+            fontFamily : "'Brush Script MT', 'Brush Script Std', cursive, Arial",
             fontSize : '80cqw',
           }}
           >
