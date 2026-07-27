@@ -226,10 +226,13 @@ interface RewardSegmentProps {
   setCurrentSegmentIndex : React.Dispatch<React.SetStateAction<number>>,
 }
 function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : RewardSegmentProps){
-   
+  
   const [rotation, setRotation] = useState(3.0)
   const [velocity, setVelocity] = useState(0.0)
   const [mouseDown, setMouseDown] = useState(false)
+
+  const [releasedRotation, setReleasedRotation] = useState(0)
+  const [numberOfSpins, setNumberOfSpins] = useState(0)
   
   const rotationRef = useRef(rotation)
   useEffect(() => {
@@ -246,6 +249,11 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
     mouseDownRef.current = mouseDown;
   }, [mouseDown])
 
+  const releasedRotationRef = useRef(releasedRotation)
+  useEffect(() => {
+    releasedRotationRef.current = releasedRotation;
+  }, [releasedRotation])
+  
   /* the parent segment state isnt set at this point, so just have a static rotation with the currentSegmentIndex of 0
   useEffect(() => {
     animateSpin()    
@@ -259,7 +267,7 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
       if (newRotation < -100) {
         newRotation %= 100
       }
-      newRotation = 100 - newRotation
+      newRotation = 100 + newRotation
     } else {
       if (newRotation >= 100) {
         newRotation %= 100
@@ -268,6 +276,8 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
 
     rotationRef.current = newRotation
     setRotation(newRotation)
+
+    //console.log(rotationRef.current)
 
     // optimization here to not iterate through the array every frame, maybe store rotation and left and right distance to next segment
     for (let i = 0; i < segments.length; i += 1) {
@@ -334,6 +344,8 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
 
   const handleMouseUp = () => {
     setMouseDown(false)
+    releasedRotationRef.current = rotationRef.current
+    setReleasedRotation(rotationRef.current)
     animateSpin()
   }
 
