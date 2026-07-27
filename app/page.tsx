@@ -1,11 +1,10 @@
 'use client'
 
 import Image from "next/image";
-import {CSSProperties, useState, useRef, useEffect} from 'react'
+import React, {CSSProperties, useState, useRef, useEffect} from 'react'
 import './globals.css'
 import './Vector2'
 import { Vector2 } from "./Vector2";
-
 
 export default function MyApp() {
 
@@ -37,6 +36,9 @@ export default function MyApp() {
     for (let i = 0; i < temp.length; i += 1) {
       temp[i].percentage_offset = running_percentage_offset
       running_percentage_offset += temp[i].percentage
+      // DEBUG
+      // temp[i].color = 'rgba(' + (i/numSegments) * 255 + ', 0, 0, 255)'
+      // console.log(temp[i].color)
     }
 
     setSegments(temp);
@@ -78,17 +80,6 @@ export default function MyApp() {
     );
   };
 
-  /*const handleMouseMove = () => {
-    let newSegment = segments[0]
-    newSegment.percentage += 2
-    newSegment.percentage_offset += 1
-    newSegment.percentage %= 100
-    newSegment.percentage_offset %= 100
-    updateSegmentAtIndex(0, newSegment)
-  }*/
-
-  
-
   return (
     <div 
       style = {{
@@ -110,7 +101,7 @@ export default function MyApp() {
   );
 }
 
-function RewardList({segments} : RewardSegmentProps){
+function RewardList({segments, currentSegmentIndex} : RewardSegmentProps){
 
   return (
     <div
@@ -132,11 +123,12 @@ function RewardList({segments} : RewardSegmentProps){
     }}
     >
     {
-      segments.map((segment) => (
+      segments.toReversed().map((segment) => (
         <RewardListElement
           key = {segment.id}
           id = {segment.id}
           color = {segment.color}
+          className = {segment.id === currentSegmentIndex ? 'rewardListElementStyleActive' : 'rewardListElementStyleBase'}
           percentage = {segment.percentage}
         />
       ))
@@ -149,20 +141,23 @@ function RewardList({segments} : RewardSegmentProps){
 class RewardListElementProps {
   id : number;
   color : string;
+  className : string;
   percentage : number;
 
-  constructor(id : number, color : string, percentage : number) {
+  constructor(id : number, color : string, className : string, percentage : number) {
     this.id = id
     this.color = color
+    this.className = className
     this.percentage = percentage
   }
 }
-function RewardListElement({color, percentage} : RewardListElementProps) {
+function RewardListElement({color, percentage, className} : RewardListElementProps) {
 
     return (
       <div
+        className = {className}
         style = {{
-          backgroundColor : color,
+          '--background-color' : color,
           borderRadius : '100vmin',
           flexGrow : 1,
           flexShrink : 1,
@@ -173,7 +168,7 @@ function RewardListElement({color, percentage} : RewardListElementProps) {
           alignItems : 'stretch',
           //padding : '2%',
           display : 'flex'
-        }}
+        } as React.CSSProperties}
       >
         <div
           style = {{
@@ -232,8 +227,8 @@ interface RewardSegmentProps {
 }
 function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : RewardSegmentProps){
    
-  const [rotation, setRotation] = useState(0.0)
-  const [velocity, setVelocity] = useState(20.0)
+  const [rotation, setRotation] = useState(3.0)
+  const [velocity, setVelocity] = useState(0.0)
   const [mouseDown, setMouseDown] = useState(false)
   
   const rotationRef = useRef(rotation)
@@ -251,23 +246,42 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
     mouseDownRef.current = mouseDown;
   }, [mouseDown])
 
+  /* the parent segment state isnt set at this point, so just have a static rotation with the currentSegmentIndex of 0
   useEffect(() => {
     animateSpin()    
   }, []);
+  */
+
+  const applyRotation = (delta : number) => {
+    let newRotation = rotationRef.current + delta
+    // could minus and add 100 but maybe somehow one frame will put the rotation at -200 or less
+    if (newRotation < 0) {
+      if (newRotation < -100) {
+        newRotation %= 100
+      }
+      newRotation = 100 - newRotation
+    } else {
+      if (newRotation >= 100) {
+        newRotation %= 100
+      }
+    }
+
+    rotationRef.current = newRotation
+    setRotation(newRotation)
+
+    // optimization here to not iterate through the array every frame, maybe store rotation and left and right distance to next segment
+    for (let i = 0; i < segments.length; i += 1) {
+      if ((rotationRef.current > segments[i].percentage_offset) && (rotationRef.current < segments[i].percentage_offset + segments[i].percentage)) {
+        setCurrentSegmentIndex(i)
+      }
+    }
+  }
 
   const animateSpin = () => {
     
     let animationFrameID : number
 
     const animate = () => {
-      // optimization here to store the rotation out of 360 instead of 100, and not iterate through the array every frame
-      let rotation_percentage = rotationRef.current/3.6
-      console.log(segments.length)
-      for (let i = 0; i < segments.length; i += 1) {
-        if ((rotation_percentage > segments[i].percentage_offset) && (rotation_percentage < segments[i].percentage_offset + segments[i].percentage)) {
-          setCurrentSegmentIndex(i)
-        }
-      }
 
       if (mouseDownRef.current) {
         cancelAnimationFrame(animationFrameID)
@@ -282,9 +296,25 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
       velocityRef.current = newVelocity
       setVelocity(newVelocity)
 
-      const newRotation = (rotationRef.current + newVelocity) % 360;
+      applyRotation(newVelocity)
+
+      /*
+      let newRotation = rotationRef.current + newVelocity
+      // could minus and add 100 but maybe somehow one frame will put the rotation at -200 or less
+      if (newRotation < 0) {
+        if (newRotation < -100) {
+          newRotation %= 100
+        }
+        newRotation = 100 - newRotation
+      } else {
+        if (newRotation >= 100) {
+          newRotation %= 100
+        }
+      }
+
       rotationRef.current = newRotation
       setRotation(newRotation)
+      */
 
       // why when I log the rotation it hasn't applied the modulo yet? something to do with how react updates
       //console.log(rotation)
@@ -318,14 +348,16 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
       const mouseMovement = new Vector2(event.movementX, event.movementY)
 
       const dot = mouseMovement.dot(clockwiseTangent)
-
+      let rotationDelta = -dot * 0.3
       //console.log("Delta: ", delta)
       //console.log("Tangent: ", clockwiseTangent);
       //console.log("Mouse movement: ", mouseMovement)
       //velocityRef.current = dot
-      setVelocity(dot)
+      setVelocity(rotationDelta)
       //console.log(velocity)
-      setRotation(rotation+dot)
+      applyRotation(rotationDelta)
+      //rotationRef.current = rotation+dot;
+      //setRotation(rotation+dot)
     }
   }
 
@@ -360,7 +392,7 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
         onMouseUp = {handleMouseUp}
         onMouseLeave = {handleMouseLeave}
         style = {{
-          rotate : String(rotation) + "deg",
+          rotate : "-" + String(rotation * 3.6) + "deg",
           flex : '0 0 auto',
           //backgroundColor : 'purple',
           height : '100%',

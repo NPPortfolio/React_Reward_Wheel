@@ -40,3 +40,17 @@ html, body {
   border-radius: 50%;
   background-color: #ff0000;
 }
+
+.rewardListElementStyleBase {
+  background-color: var(--background-color);
+  transition-duration: 0.25s;
+  transition-timing-function: ease-out;
+}
+
+.rewardListElementStyleActive {
+  /*background-color: oklch(from var(--background-color) l calc(c + 1) h);*/
+  background-color: color-mix(in srgb, var(--background-color), white 20%);
+  filter: drop-shadow(0 0 1rem var(--background-color));
+  transform: scale(1.05);
+  transform: translate(5% 5%);
+}
