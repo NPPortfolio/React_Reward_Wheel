@@ -48,9 +48,10 @@ html, body {
 }
 
 .rewardListElementStyleActive {
-  /*background-color: oklch(from var(--background-color) l calc(c + 1) h);*/
-  background-color: color-mix(in srgb, var(--background-color), white 20%);
-  filter: drop-shadow(0 0 1rem var(--background-color));
+  background-color: oklch(from var(--background-color) l calc(c + 0.1) h);
+  /*background-color: color-mix(in srgb, var(--background-color), white 20%);*/
+  /*filter: drop-shadow(0 0 1rem var(--background-color));*/
+  filter: drop-shadow(0 0 1rem oklch(from var(--background-color) l calc(c + 0.1) h));
   transform: scale(1.05);
   transform: translate(5% 5%);
 }

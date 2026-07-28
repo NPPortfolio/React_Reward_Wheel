@@ -6,17 +6,20 @@ import './globals.css'
 import './Vector2'
 import { Vector2 } from "./Vector2";
 
-export default function MyApp() {
+export default function Root() {
 
   const [segments, setSegments] = useState<RewardSegment[]>([
-    //{id : 0, color : 'blue', percentage : 33, percentage_offset : 0},
+    {id : 0, color : 'red', percentage : 40, percentage_offset : 0},
+    {id : 1, color : 'green', percentage : 30, percentage_offset : 40},
+    {id : 2, color : 'blue', percentage : 15, percentage_offset : 70},
+    {id : 3, color : 'yellow', percentage : 10, percentage_offset : 85},
+    {id : 4, color : 'white', percentage : 5, percentage_offset : 95},
   ])
 
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0)
 
-  // 1. Define your initialization function
   const initFunction = () => {
-    randomizeSegments(5, 5)
+    //randomizeSegments(5, 5)
   };
 
   const randomizeSegments = (numSegments : number, minimumSegmentPercentage : number) => {
@@ -44,10 +47,9 @@ export default function MyApp() {
     setSegments(temp);
   }
 
-  // 2. Run it once on load
   useEffect(() => {
     initFunction();
-  }, []); // <-- Empty array ensures this only runs once
+  }, []);
 
   const addRandomSegment = () => {
     /*
@@ -182,7 +184,7 @@ function RewardListElement({color, percentage, className} : RewardListElementPro
             minHeight : 0,
             //marginRight : 'auto',
             //maxWidth : '0%',
-            maxHeight : '110%',
+            //maxHeight : '110%',
             //alignSelf : 'center',
             aspectRatio : 1/1,
 
@@ -253,6 +255,11 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
   useEffect(() => {
     releasedRotationRef.current = releasedRotation;
   }, [releasedRotation])
+
+  const numberOfSpinsRef = useRef(numberOfSpins)
+  useEffect(() => {
+    numberOfSpinsRef.current = numberOfSpins;
+  }, [numberOfSpins])
   
   /* the parent segment state isnt set at this point, so just have a static rotation with the currentSegmentIndex of 0
   useEffect(() => {
@@ -262,7 +269,15 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
 
   const applyRotation = (delta : number) => {
     let newRotation = rotationRef.current + delta
+
+    let spinCompleted : Boolean = false
+
+    if (!mouseDownRef.current && (isBetween(releasedRotationRef.current, rotationRef.current, newRotation, false))) {
+      spinCompleted = true
+    }
+
     // could minus and add 100 but maybe somehow one frame will put the rotation at -200 or less
+    // also, in that case it wouldn't count as two spins completed only one
     if (newRotation < 0) {
       if (newRotation < -100) {
         newRotation %= 100
@@ -271,15 +286,25 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
     } else {
       if (newRotation >= 100) {
         newRotation %= 100
+        // need an additional check here because the rotation is always positive, maybe better way to do it
+        if (!mouseDownRef.current && (isBetween(releasedRotationRef.current, rotationRef.current, newRotation-100, false))) {
+          spinCompleted = true
+        }
       }
+    }
+
+    if (spinCompleted) {
+      //console.log(rotationRef.current, releasedRotationRef.current, newRotation)
+      numberOfSpinsRef.current += 1
+      setNumberOfSpins(numberOfSpinsRef.current)
+      console.log(numberOfSpinsRef.current)
     }
 
     rotationRef.current = newRotation
     setRotation(newRotation)
 
-    //console.log(rotationRef.current)
-
     // optimization here to not iterate through the array every frame, maybe store rotation and left and right distance to next segment
+    // TODO: could check if a segment is passed over so it still lights up in the list while spinning
     for (let i = 0; i < segments.length; i += 1) {
       if ((rotationRef.current > segments[i].percentage_offset) && (rotationRef.current < segments[i].percentage_offset + segments[i].percentage)) {
         setCurrentSegmentIndex(i)
@@ -346,6 +371,8 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
     setMouseDown(false)
     releasedRotationRef.current = rotationRef.current
     setReleasedRotation(rotationRef.current)
+    numberOfSpinsRef.current = 0;
+    setNumberOfSpins(0)
     animateSpin()
   }
 
@@ -398,6 +425,7 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
           clipPath : 'polygon(0% 0%, 50% 100%, 100% 0%)',
         }}>
       </div>
+      <ValidIndicator />
       <div 
         onMouseMove = {handleMouseMove}
         onMouseDown = {handleMouseDown}
@@ -582,6 +610,51 @@ const Reward_Segment_polygon_coordinates_from_rotation_percentage = (percentage 
   //return x_string + "% " + y_string + "%"
 }
 
+function ValidIndicator(/*{numberOfSpins} : number*/) {
+
+
+
+  return (
+    <div
+      style = {{
+        backgroundColor : 'orange',
+        position : 'absolute',
+        width : '20%',
+        maxWidth : '20%',
+        maxHeight : '10%',
+        left : '2%',
+        bottom : '2%',
+        display : 'flex',
+        alignItems : 'center',
+        justifyContent : 'center',
+
+        containerType : 'inline-size',
+      }}
+    >
+      <p
+      style = {{
+        color : 'red',
+        fontSize : '5cqh',
+        backgroundColor : 'white',
+        flexGrow : '1',
+      }}
+      >
+        {"VALID".substring(0, 2)}
+      </p>
+      <p
+      style = {{
+        color : 'white',
+        fontSize : '5cqh',
+        backgroundColor : 'red',    
+        flexGrow : '1',    
+      }}
+      >
+        {"VALID".substring(2, 5)}
+      </p>
+    </div>
+  )
+}
+
 
 
 // misc functions
@@ -596,6 +669,12 @@ function randomNumberRangeInclusive(min : number, max : number): number {
   const maxFloor = Math.floor(max);
   
   return Math.floor(Math.random() * (maxFloor - minCeil + 1)) + minCeil;
+}
+
+function isBetween(num: number, a: number, b: number, inclusive: boolean = true): boolean {
+  return inclusive 
+    ? num >= Math.min(a, b) && num <= Math.max(a, b) 
+    : num > Math.min(a, b) && num < Math.max(a, b);
 }
 
 
