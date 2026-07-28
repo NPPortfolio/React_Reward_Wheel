@@ -196,13 +196,13 @@ function RewardListElement({color, percentage, className} : RewardListElementPro
             containerType : 'inline-size',
           }}
         >
-          <p style = {{
+          <div style = {{
             fontFamily : "'Brush Script MT', 'Brush Script Std', cursive, Arial",
             fontSize : '80cqw',
           }}
           >
             {percentage}
-          </p>
+          </div>
         </div>
       </div>
     )
@@ -621,40 +621,61 @@ function ValidIndicator(/*{numberOfSpins} : number*/) {
         position : 'absolute',
         width : '20%',
         maxWidth : '20%',
+        height : '10%',
         maxHeight : '10%',
         left : '2%',
         bottom : '2%',
         display : 'flex',
         alignItems : 'center',
         justifyContent : 'center',
-
-        containerType : 'inline-size',
       }}
     >
-      <p
-      style = {{
-        color : 'red',
-        fontSize : '5cqh',
-        backgroundColor : 'white',
-        flexGrow : '1',
-      }}
-      >
-        {"VALID".substring(0, 2)}
-      </p>
-      <p
-      style = {{
-        color : 'white',
-        fontSize : '5cqh',
-        backgroundColor : 'red',    
-        flexGrow : '1',    
-      }}
-      >
-        {"VALID".substring(2, 5)}
-      </p>
+      VALID
     </div>
   )
 }
 
+/*
+  old code, attempting to change the color of individual letters
+  <div
+  style = {{
+    color : 'red',
+    backgroundColor : 'white',
+    textAlign : 'right',
+    flexGrow : 1,
+    flexShrink : 1,
+    minWidth : 0,
+    minHeight : 0,
+
+    containerType : 'inline-size',
+  }}
+  >
+    <div style = {{
+      fontSize : '60cqw',
+    }}>
+    {"VALID".substring(0, 0)}
+    </div>
+  </div>
+  <div
+  style = {{
+    color : 'white',
+    backgroundColor : 'red',
+    flexGrow : 1,
+    flexShrink : 1,
+    minWidth : 0,
+    minHeight : 0,
+
+    containerType : 'inline-size',
+  }}
+  >
+    <div style = {{
+      fontSize : '60cqw',
+    }}>
+    {"VALID".substring(0, 5)}
+    </div>
+  </div>
+
+*/
 
 
 // misc functions
