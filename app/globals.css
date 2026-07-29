@@ -69,3 +69,12 @@ html, body {
   background-size: 20px 35px;
   background-position: 0 0, 0 0, 10px 18px, 10px 18px, 0 0, 10px 18px;
 }
+
+.modalStandard {
+  overflow : visible;
+}
+
+.modalStandard::backdrop {
+  background-color : rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}

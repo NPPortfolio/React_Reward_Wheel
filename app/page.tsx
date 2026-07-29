@@ -5,6 +5,8 @@ import React, {CSSProperties, useState, useRef, useEffect} from 'react'
 import './globals.css'
 import './Vector2'
 import { Vector2 } from "./Vector2";
+import Confetti from 'react-confetti'
+import { useWindowSize } from 'react-use'
 
 export default function Root() {
 
@@ -17,6 +19,10 @@ export default function Root() {
   ])
 
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0)
+
+  const winnerDialogRef = useRef<HTMLDialogElement>(null)
+  const openWinnerModal = () => winnerDialogRef.current?.showModal();
+  const closeWinnerModal = () => winnerDialogRef.current?.close();
 
   const initFunction = () => {
     //randomizeSegments(5, 5)
@@ -82,6 +88,8 @@ export default function Root() {
     );
   };
 
+  const {width, height} = useWindowSize()
+
   return (
     <div
       className="mainBackgroundStyle"
@@ -99,6 +107,27 @@ export default function Root() {
       }}>
       <RewardWheel segments = {segments} currentSegmentIndex={currentSegmentIndex} setCurrentSegmentIndex={setCurrentSegmentIndex}/>
       <RewardList segments = {segments} currentSegmentIndex={currentSegmentIndex} setCurrentSegmentIndex={setCurrentSegmentIndex}/>
+      <button onClick = {openWinnerModal}>OPEN WINNER MODAL</button>
+      <dialog 
+        ref={winnerDialogRef}
+        className = "modalStandard"
+        style = {{
+          width : '50%',
+          height : '30%',
+          backgroundColor : segments[currentSegmentIndex].color,
+          border : 0,
+          borderRadius : "10cqh",
+        }}>
+        <button
+          onClick = {closeWinnerModal}
+          style = {{
+
+          }}
+        />
+        <h1>TEST</h1>
+        <p>asdfghjkl</p>
+        <Confetti width = {width} height = {height} style = {{position : "fixed"}}/>
+      </dialog>
     </div>
   );
 }
