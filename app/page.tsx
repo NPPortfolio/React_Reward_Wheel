@@ -83,7 +83,8 @@ export default function Root() {
   };
 
   return (
-    <div 
+    <div
+      className="mainBackgroundStyle"
       style = {{
         display : "flex",
         width : '100vw',
@@ -92,7 +93,6 @@ export default function Root() {
         //height : '100%',
         //width : '100%',
         flexDirection : "row",
-        backgroundColor : "blue",
         gap : 32,
         overflowX : 'hidden',
         overflowY : 'hidden',
@@ -108,7 +108,6 @@ function RewardList({segments, currentSegmentIndex} : RewardSegmentProps){
   return (
     <div
     style = {{
-      backgroundColor : 'pink',
       flex : '1 1 0',
       minWidth : 0,
       minHeight : 0,
@@ -232,10 +231,14 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
   const [rotation, setRotation] = useState(3.0)
   const [velocity, setVelocity] = useState(0.0)
   const [mouseDown, setMouseDown] = useState(false)
-
+  
   const [releasedRotation, setReleasedRotation] = useState(0)
   const [numberOfSpins, setNumberOfSpins] = useState(0)
   
+  // using this to track if the mouse is still
+  const lastMousePos = useRef({x : 0, y : 0, time : Date.now()})
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const rotationRef = useRef(rotation)
   useEffect(() => {
     rotationRef.current = rotation;
@@ -297,7 +300,6 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
       //console.log(rotationRef.current, releasedRotationRef.current, newRotation)
       numberOfSpinsRef.current += 1
       setNumberOfSpins(numberOfSpinsRef.current)
-      console.log(numberOfSpinsRef.current)
     }
 
     rotationRef.current = newRotation
@@ -333,28 +335,6 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
 
       applyRotation(newVelocity)
 
-      /*
-      let newRotation = rotationRef.current + newVelocity
-      // could minus and add 100 but maybe somehow one frame will put the rotation at -200 or less
-      if (newRotation < 0) {
-        if (newRotation < -100) {
-          newRotation %= 100
-        }
-        newRotation = 100 - newRotation
-      } else {
-        if (newRotation >= 100) {
-          newRotation %= 100
-        }
-      }
-
-      rotationRef.current = newRotation
-      setRotation(newRotation)
-      */
-
-      // why when I log the rotation it hasn't applied the modulo yet? something to do with how react updates
-      //console.log(rotation)
-      //console.log("Rotation: ", rotationRef.current)
-
       animationFrameID = requestAnimationFrame(animate)
     }
 
@@ -373,11 +353,25 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
     setReleasedRotation(rotationRef.current)
     numberOfSpinsRef.current = 0;
     setNumberOfSpins(0)
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
     animateSpin()
   }
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     if (mouseDown) {
+      
+      // mouse move timeout
+      const currentTime = Date.now()
+      const timeDelta = currentTime - lastMousePos.current.time;
+      lastMousePos.current = {x : event.clientX, y : event.clientY, time : currentTime}
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+      timeoutRef.current = setTimeout(() => {
+        setVelocity(0)
+      }, 100);
 
       const rect = event.currentTarget.getBoundingClientRect();
       const center = new Vector2(rect.left + rect.width / 2, rect.top + rect.height / 2)
@@ -388,19 +382,16 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
 
       const dot = mouseMovement.dot(clockwiseTangent)
       let rotationDelta = -dot * 0.3
-      //console.log("Delta: ", delta)
-      //console.log("Tangent: ", clockwiseTangent);
-      //console.log("Mouse movement: ", mouseMovement)
-      //velocityRef.current = dot
+
       setVelocity(rotationDelta)
-      //console.log(velocity)
       applyRotation(rotationDelta)
-      //rotationRef.current = rotation+dot;
-      //setRotation(rotation+dot)
     }
   }
 
   const handleMouseLeave = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
     setMouseDown(false)
   }
 
@@ -410,7 +401,7 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
         position : 'relative',
         //backgroundColor : 'green',
         padding : '3%',
-        filter : 'drop-shadow(0px 0px 20px rgba(1.0, 0.0, 0.0, 1.0))',
+        filter : 'drop-shadow(0px 0px 20px rgba(0, 0, 0, 1))',
       }}
     >
       <div
@@ -425,7 +416,7 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
           clipPath : 'polygon(0% 0%, 50% 100%, 100% 0%)',
         }}>
       </div>
-      <ValidIndicator />
+      <ValidIndicator numberOfSpins={numberOfSpins}/>
       <div 
         onMouseMove = {handleMouseMove}
         onMouseDown = {handleMouseDown}
@@ -484,7 +475,6 @@ function Reward_Segment({color, percentage, percentage_offset} : RewardSegment){
 
 const Reward_Segment_style = (color : string, percentage : number, percentage_offset : number): CSSProperties => {
   
-  //console.log(percentage, " ", percentage_offset)
   let clip_path_string : string = "polygon(50% 50%, "
   
   let p1 = Reward_Segment_polygon_coordinates_from_rotation_percentage(percentage_offset)
@@ -610,14 +600,13 @@ const Reward_Segment_polygon_coordinates_from_rotation_percentage = (percentage 
   //return x_string + "% " + y_string + "%"
 }
 
-function ValidIndicator(/*{numberOfSpins} : number*/) {
-
-
-
+function ValidIndicator({numberOfSpins} : {numberOfSpins : number}) {
   return (
     <div
+      className="vaildIndicatorStyle"
       style = {{
-        backgroundColor : 'orange',
+        borderRadius : '100vmin',
+
         position : 'absolute',
         width : '20%',
         maxWidth : '20%',
@@ -625,12 +614,22 @@ function ValidIndicator(/*{numberOfSpins} : number*/) {
         maxHeight : '10%',
         left : '2%',
         bottom : '2%',
+
         display : 'flex',
         alignItems : 'center',
         justifyContent : 'center',
-      }}
+
+        containerType : 'inline-size',
+
+        '--valid-percentage' : numberOfSpins/5 * 100,
+      } as React.CSSProperties}
     >
-      VALID
+      <div style = {{
+        fontFamily : "'Brush Script MT', 'Brush Script Std', cursive, Arial",
+        fontSize : '30cqw',
+      }}>
+        VALID
+      </div>
     </div>
   )
 }
