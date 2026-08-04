@@ -1,12 +1,11 @@
 'use client'
 
 import Image from "next/image";
-import React, {CSSProperties, useState, useRef, useEffect} from 'react'
+import React, {CSSProperties, useState, useRef, useEffect, useLayoutEffect} from 'react'
 import './globals.css'
 import './Vector2'
 import { Vector2 } from "./Vector2";
 import Confetti from 'react-confetti'
-import { useWindowSize } from 'react-use'
 
 export default function Root() {
 
@@ -57,6 +56,8 @@ export default function Root() {
     initFunction();
   }, []);
 
+  const {width, height} = useWindowSize();
+
   const addRandomSegment = () => {
     /*
     let segment_percentage = 100
@@ -88,8 +89,6 @@ export default function Root() {
     );
   };
 
-  const {width, height} = useWindowSize()
-
   return (
     <div
       className="mainBackgroundStyle"
@@ -105,8 +104,8 @@ export default function Root() {
         overflowX : 'hidden',
         overflowY : 'hidden',
       }}>
-      <RewardWheel segments = {segments} currentSegmentIndex={currentSegmentIndex} setCurrentSegmentIndex={setCurrentSegmentIndex}/>
-      <RewardList segments = {segments} currentSegmentIndex={currentSegmentIndex} setCurrentSegmentIndex={setCurrentSegmentIndex}/>
+      <RewardWheel segments = {segments} currentSegmentIndex={currentSegmentIndex} setCurrentSegmentIndex={setCurrentSegmentIndex} openWinnerModal={openWinnerModal}/>
+      <RewardList segments = {segments} currentSegmentIndex={currentSegmentIndex} setCurrentSegmentIndex={setCurrentSegmentIndex} openWinnerModal={openWinnerModal}/>
       <button onClick = {openWinnerModal}>OPEN WINNER MODAL</button>
       <dialog 
         ref={winnerDialogRef}
@@ -126,10 +125,24 @@ export default function Root() {
         />
         <h1>TEST</h1>
         <p>asdfghjkl</p>
+        <ConfettiWrapper />
         <Confetti width = {width} height = {height} style = {{position : "fixed"}}/>
       </dialog>
     </div>
   );
+}
+
+function ConfettiWrapper(){
+  const [isMounted, setIsMounted] = useState(false)
+  const { width, height } = useWindowSize()
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) return null
+
+  return <Confetti width={width} height={height} />
 }
 
 function RewardList({segments, currentSegmentIndex} : RewardSegmentProps){
@@ -254,8 +267,9 @@ interface RewardSegmentProps {
   segments : RewardSegment[],
   currentSegmentIndex : number,
   setCurrentSegmentIndex : React.Dispatch<React.SetStateAction<number>>,
+  openWinnerModal : () => void,
 }
-function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : RewardSegmentProps){
+function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex, openWinnerModal} : RewardSegmentProps){
   
   const [rotation, setRotation] = useState(3.0)
   const [velocity, setVelocity] = useState(0.0)
@@ -354,7 +368,9 @@ function RewardWheel({segments, currentSegmentIndex, setCurrentSegmentIndex} : R
         return
       }
       if (Math.abs(velocityRef.current) < 0.01) {
-        // TODO pop up winner
+        if (numberOfSpinsRef.current >= 5) {
+          openWinnerModal()
+        }
         cancelAnimationFrame(animationFrameID)
         return
       }
@@ -726,7 +742,32 @@ function isBetween(num: number, a: number, b: number, inclusive: boolean = true)
     : num > Math.min(a, b) && num < Math.max(a, b);
 }
 
+export function useWindowSize() {
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1200,
+    height: typeof window !== 'undefined' ? window.innerHeight : 800,
+  });
 
+  useLayoutEffect(() => {
+
+    if (typeof window === 'undefined') return
+
+    function handleResize() {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+    
+    window.addEventListener('resize', handleResize);
+    
+    handleResize();
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return windowSize;
+}
 
 /*
 
