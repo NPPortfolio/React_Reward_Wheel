@@ -117,16 +117,45 @@ export default function Root() {
           border : 0,
           borderRadius : "10cqh",
         }}>
-        <button
-          onClick = {closeWinnerModal}
+        <div
           style = {{
-
-          }}
-        />
-        <h1>TEST</h1>
-        <p>asdfghjkl</p>
-        <ConfettiWrapper />
-        <Confetti width = {width} height = {height} style = {{position : "fixed"}}/>
+            display : 'flex',
+            flexDirection : 'column',
+            alignItems : 'center',
+            width : '100%',
+            height : '100%',
+          }}>
+          <div
+            style = {{
+              backgroundColor : "white",
+              flexGrow : 1,
+              flexShrink : 1,
+              display : 'flex',
+              width : '40%',
+              maxWidth : '40%',
+              height : '40%',
+              maxHeight : '40%',
+              justifyContent : 'center',
+              alignItems : 'center',
+              containerType : 'inline-size',
+              borderRadius : '100vmin',
+            }}>
+            <div 
+              style = {{
+                fontFamily : "'Brush Script MT', 'Brush Script Std', cursive, Arial",
+                fontSize : '25cqw',
+              }}>
+              WINNER
+            </div>
+          </div>
+          <button
+            onClick = {closeWinnerModal}
+            style = {{
+              backgroundColor : "black",
+            }}
+          />
+        </div>
+        <ConfettiWrapper/>
       </dialog>
     </div>
   );
@@ -142,7 +171,7 @@ function ConfettiWrapper(){
 
   if (!isMounted) return null
 
-  return <Confetti width={width} height={height} />
+  return <Confetti width={width} height={height} style = {{position : "fixed"}}/>
 }
 
 function RewardList({segments, currentSegmentIndex} : RewardSegmentProps){
