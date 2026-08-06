@@ -106,10 +106,11 @@ export default function Root() {
       }}>
       <RewardWheel segments = {segments} currentSegmentIndex={currentSegmentIndex} setCurrentSegmentIndex={setCurrentSegmentIndex} openWinnerModal={openWinnerModal}/>
       <RewardList segments = {segments} currentSegmentIndex={currentSegmentIndex} setCurrentSegmentIndex={setCurrentSegmentIndex} openWinnerModal={openWinnerModal}/>
-      <button onClick = {openWinnerModal}>OPEN WINNER MODAL</button>
+      {/*<button onClick = {openWinnerModal}>OPEN WINNER MODAL</button>*/}
       <dialog 
         ref={winnerDialogRef}
         className = "modalStandard"
+        onClick = {closeWinnerModal}
         style = {{
           width : '50%',
           height : '30%',
@@ -135,7 +136,7 @@ export default function Root() {
               maxWidth : '40%',
               height : '40%',
               maxHeight : '40%',
-              justifyContent : 'center',
+              justifyContent : 'space-evenly',
               alignItems : 'center',
               containerType : 'inline-size',
               borderRadius : '100vmin',
@@ -148,12 +149,14 @@ export default function Root() {
               WINNER
             </div>
           </div>
-          <button
+          {/*<div
             onClick = {closeWinnerModal}
             style = {{
+              height : '40%',
+              aspectRatio : '1',
               backgroundColor : "black",
             }}
-          />
+          />*/}
         </div>
         <ConfettiWrapper/>
       </dialog>
