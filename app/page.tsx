@@ -97,8 +97,6 @@ export default function Root() {
         width : '100vw',
         height : '100vh',
         justifyContent : 'center',
-        //height : '100%',
-        //width : '100%',
         flexDirection : "row",
         gap : 32,
         overflowX : 'hidden',
